@@ -5,8 +5,8 @@
     October 2019 
     
     Additional documentation can be found at 
-    https://drive.google.com/drive/folders/1cg08J-Sy--wxh_dCHIkk9I4-MQbLWCtZ?usp=sharing
-    
+    https://docs.google.com/document/d/1IQfrNybRuYe4H3vv6nQQGbgDXLxGWLdKmQykB5gCzSg/edit?usp=sharing
+    https://docs.google.com/document/d/1HTnXRNGVyprxFUJaoBT3BeXZ07UaVWwNvLhE89zKPUM/edit?usp=sharing
     
 '''
 
@@ -24,7 +24,7 @@ import numpy as np
 detection_field_definitions = {
     'detID'         : 'Unique Detection ID',
     'trkID'         : 'Unique Tracklet ID ',
-    'timeUTC'       : 'Time of each observation [UTC]'
+    'timeUTC'       : 'Time of each observation [UTC]',
     'Obs_X'         : 'X-Position of the Observatory w.r.t. the Sun at the time of detection. Ecliptic coordinate Frame. [au]',
     'Obs_Y'         : 'Y-Position of the Observatory w.r.t. the Sun at the time of detection. Ecliptic coordinate Frame. [au]',
     'Obs_Z'         : 'Z-Position of the Observatory w.r.t. the Sun at the time of detection. Ecliptic coordinate Frame. [au]',
@@ -47,5 +47,10 @@ object_field_definitions = {
     'objectID'      : 'Unique Object ID',
     'isNEO'         : 'Label whether a known object is an NEO [boolean]',
     'objectType'    : 'Sub-classification of object into various types [integer]',
-    'objectOrbit'   : 'Nominal/best-fit Keplerian orbit for the object [q [au], e [#], i [radians], AP [radians], LAN [radians], T [JDUTC]]',
+    'orbit_q'	    : 'Nominal/best-fit Keplerian orbit for the object: percenter distance [au]',
+    'orbit_e'       : 'Nominal/best-fit Keplerian orbit for the object: eccentricity',
+    'orbit_i'	    : 'Nominal/best-fit Keplerian orbit for the object: inclination [rad]',
+    'orbit_AP'	    : 'Nominal/best-fit Keplerian orbit for the object: arg. of peri. [rad]',
+    'orbit_LAN'	    : 'Nominal/best-fit Keplerian orbit for the object: long. asc. node [rad]',
+    'orbit_TP'      : 'Nominal/best-fit Keplerian orbit for the object: time peri. pass [JDUTC]',
 }

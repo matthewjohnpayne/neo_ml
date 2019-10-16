@@ -1,5 +1,7 @@
 '''
     Sample code to demonstrate the ingest of neo 'tracklet' data from sample data files
+    Intended for machine learning class with C. Nugent @ Olin
+    October 2019
     
     This is *not* intended to be a complete 'how-to' guide to a full analysis ...
     ... It is just a demo of some simple methods to read the data into some numpy/pandas data structures
@@ -10,6 +12,7 @@
 # Third-party imports
 # ---------------------------------------
 import os, sys
+from collections import namedtuple
 
 # ---------------------------------------
 # Local imports
@@ -22,7 +25,8 @@ import data
 
 class NEODATA():
     '''
-        ...
+        Convenience class used to demonstrate how to read, check & use the sample data 
+        It is expected that this class would need to be extended in order to allow a full data analysis
     '''
 
     def __init__(self, ):
@@ -42,7 +46,7 @@ class NEODATA():
         return dataList
     
 
-    def _read_data_into_dict(self, filepath, dataType , dataKey):
+    def _read_data_into_dict(self, filepath, fieldDefinitions , dataKey):
         '''
             Convenience function to ...
             (i) read data from a file
@@ -53,38 +57,36 @@ class NEODATA():
         dataArray = self._read_from_file(filepath)
         
         # Get the expected data structure
-        assert dataType in [data.detection_field_definitions, data.tracklet_field_definitions , data.object_field_definitions], 'dataType not recognized: %r' % dataType
-        dataDefinitions = data.dataType
+        assert fieldDefinitions in [data.detection_field_definitions, data.tracklet_field_definitions , data.object_field_definitions], 'fieldDefinitions not recognized: %r' % fieldDefinitions
         
         # Check the imported data has the expected structure
         # (if not, that implies that the person that made the data file did something wrong!)
-        dataList  = self._check_imported_data_structure(dataDefinitions , dataArray )
+        headerKeys, dataList  = self._check_imported_data_structure(fieldDefinitions , dataKey, dataArray )
         
         # Structure the data into an appropriatedly key-ed dictionary
         # While doing this, check for uniqueness
-        dataDict
+        dataDict = {}
         for item in dataList:
-            assert item[dataKey] not in dataDict, '%s alreadt in dataDict ' % item[dataKey]
-            dataDict[item[dataKey]] = item
+            d = dict(zip(headerKeys, item))
+            #print(r)
+            #print(d)
+            #print(type(d))
+            #print(d[dataKey])
+            assert d[dataKey] not in dataDict, '%s already in dataDict ' % d[dataKey]
+            dataDict[d[dataKey]] = item
         
         return dataDict
 
     def read_detection_data_into_dict(self, filepath):
-        '''
-            Convenience function to read detection-data into a dictionary: keyed on detID
-        '''
+        ''' Convenience function to read detection-data into a dictionary: keyed on detID'''
         return self._read_data_into_dict(filepath , data.detection_field_definitions , 'detID')
 
     def read_tracklet_data_into_dict(self, filepath):
-        '''
-            Convenience function to read tracklet-data into a dictionary: keyed on trkID
-        '''
+        '''Convenience function to read tracklet-data into a dictionary: keyed on trkID'''
         return self._read_data_into_dict(filepath , data.tracklet_field_definitions , 'trkID')
 
     def read_object_data_into_dict(self, filepath):
-        '''
-            Convenience function to read object-data into a dictionary: keyed on objectID
-        '''
+        '''Convenience function to read object-data into a dictionary: keyed on objectID'''
         return self._read_data_into_dict(filepath , data.object_field_definitions , 'objectID')
 
     def _check_imported_data_structure(self, dataDefinitions , dataKey, dataArray ):
@@ -103,27 +105,29 @@ class NEODATA():
         headerKeys = ""
         for line in headArray:
             if len([key for key in dataDefinitions if key in line]) == len(dataDefinitions):
-                headerKeys = line[1:].split(",")
+                headerKeys = [_.strip() for _ in line[1:].split(",") ]
                 assert len(headerKeys) == len(dataDefinitions), ' differing lengths ... %r ,  %r' % (headerKeys , dataDefinitions)
                 break
         assert headerKeys != "", 'could not find correct header line'
+        print("\n headerKeys = %r\n " % headerKeys)
 
 
         # Check body
         # Populate a dictionary with the data from the body
         dataList = []
         for line in body:
-            lineSplit = line.split(",")
+            lineSplit = [_.strip() for _ in line.split(",") ]
+            
             # (i) check the number of fields is correct
             assert len(lineSplit) == len(dataDefinitions)
         
             # (ii) insert additional checks of content
             # ...
             
-            # (iii) turn each line/row into a namedTuple
-            dataList.append()
+            # (iii) append into list
+            dataList.append( lineSplit )
             
-        return dataList
+        return headerKeys, dataList
 
 
     def check_tracklet_correspondance(detDict, trkDict, objDict):
@@ -180,15 +184,16 @@ class NEODATA():
 N = NEODATA()
 
 # (i) Read detection data into a dictionary
-filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_real_observations.txt')
+filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_real_detections.csv')
 detDict = N.read_detection_data_into_dict(filepath)
+print('len(detDict) = ', len(detDict))
 
 # (ii) Read tracklet data into a dictionary
-filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_real_tracklets.txt')
+filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_real_tracklets.csv')
 trkDict = N.read_tracklet_data_into_dict(filepath)
 
 # (iii) Read object data into a dictionary
-filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_real_objects.txt')
+filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_real_objects.csv')
 objDict = N.read_object_data_into_dict(filepath)
 
 # (iv) Perform a test/check to see whether
