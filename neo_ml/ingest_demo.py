@@ -42,12 +42,12 @@ class NEODATA():
         return dataList
     
 
-    def _read_data_into_dict(self, filepath, dataType ):
+    def _read_data_into_dict(self, filepath, dataType , dataKey):
         '''
             Convenience function to ...
             (i) read data from a file
             (ii) check that the data type is as expected
-            (iii) return the data in an appropriately formatted dictionary
+            (iii) return the data in an dictionary key-ed on the supplied dataKey
         '''
         # Read the data from file
         dataArray = self._read_from_file(filepath)
@@ -58,29 +58,36 @@ class NEODATA():
         
         # Check the imported data has the expected structure
         # (if not, that implies that the person that made the data file did something wrong!)
-        # If all is well, return appropriately structured dictionary
-        dataDict = self._check_imported_data_structure(dataDefinitions , dataArray )
+        dataList  = self._check_imported_data_structure(dataDefinitions , dataArray )
+        
+        # Structure the data into an appropriatedly key-ed dictionary
+        # While doing this, check for uniqueness
+        dataDict
+        for item in dataList:
+            assert item[dataKey] not in dataDict, '%s alreadt in dataDict ' % item[dataKey]
+            dataDict[item[dataKey]] = item
+        
         return dataDict
 
     def read_detection_data_into_dict(self, filepath):
         '''
-            Convenience function to read detection-data into a dictionary structure
+            Convenience function to read detection-data into a dictionary: keyed on detID
         '''
-        return self._read_data_into_dict(filepath , data.detection_field_definitions )
+        return self._read_data_into_dict(filepath , data.detection_field_definitions , 'detID')
 
     def read_tracklet_data_into_dict(self, filepath):
         '''
-            Convenience function to read tracklet-data into a dictionary structure
+            Convenience function to read tracklet-data into a dictionary: keyed on trkID
         '''
-        return self._read_data_into_dict(filepath , data.tracklet_field_definitions )
+        return self._read_data_into_dict(filepath , data.tracklet_field_definitions , 'trkID')
 
     def read_object_data_into_dict(self, filepath):
         '''
-            Convenience function to read object-data into a dictionary structure
+            Convenience function to read object-data into a dictionary: keyed on objectID
         '''
-        return self._read_data_into_dict(filepath , data.tracklet_field_definitions )
+        return self._read_data_into_dict(filepath , data.object_field_definitions , 'objectID')
 
-    def _check_imported_data_structure(self, dataDefinitions , dataArray ):
+    def _check_imported_data_structure(self, dataDefinitions , dataKey, dataArray ):
         '''
             Convenience function to check whether the data in the dataArray has the correct structure
             
@@ -104,7 +111,7 @@ class NEODATA():
 
         # Check body
         # Populate a dictionary with the data from the body
-        dataDict = { k:[] for k in headerKeys}
+        dataList = []
         for line in body:
             lineSplit = line.split(",")
             # (i) check the number of fields is correct
@@ -114,13 +121,9 @@ class NEODATA():
             # ...
             
             # (iii) turn each line/row into a namedTuple
+            dataList.append()
             
-            
-            
-        # Convert all lists to arrays
-        dataDict = {k:np.array(v) for k,v in dataDict.items()}
-
-        return dataDict
+        return dataList
 
 
     def check_tracklet_correspondance(detDict, trkDict, objDict):
@@ -130,21 +133,19 @@ class NEODATA():
         (b) all of the tracklet-IDs that are in the *tracklet* dict have corresponding entries in the *object* dict (and vice-versa)
         '''
 
-        # Check for uniqueness where uniqueness expected ...
-        for IDs in [ detDict[detID] , trkDict[trkID] ,objDict[objectID] ]:
-            self._check_unique(IDs)
-
         # Check all of the tracklet-IDs that are in the *detection* dict have corresponding entries in the *tracklet* dict (and vice-versa)
-        for t in detDict[trkID]:
-            assert t in trkDict[trkID], '%s not in trkDict[trkID]' % t
-        for t in trkDict[trkID]:
-            assert t in detDict[trkID], '%s not in detDict[trkID]' % t
+        trkIDsFromDetectionDict = { det['trkID'] : True for det in detDict.values() }
+        for trkID in trkIDsFromDetectionDict:
+            assert trkID in trkDict, '%s not in trkDict' % t
+        for trkID in trkDict:
+            assert trkID in trkIDsFromDetectionDict, '%s not in trkIDsFromDetectionDict and hence not in detDict' % t
 
         # Check all of the tracklet-IDs that are in the *tracklet* dict have corresponding entries in the *object* dict (and vice-versa)
-        for t in objDict[trkID]:
-            assert t in trkDict[trkID], '%s not in trkDict[trkID]' % t
-        for t in trkDict[trkID]:
-            assert t in objDict[trkID], '%s not in objDict[trkID]' % t
+        trkIDsFromObjectDict = { det['trkID'] : True for det in objDict.values() }
+        for trkID in trkIDsFromObjectDict:
+            assert trkID in trkDict, '%s not in trkDict' % t
+        for trkID in trkDict:
+            assert trkID in trkIDsFromDetectionDict, '%s not in trkIDsFromDetectionDict  and hence not in objDict' % t
 
 
     def _check_unique(self,  array ):
@@ -155,13 +156,19 @@ class NEODATA():
         return True
 
 
-    def generate_label_arrays(self, detDict, trkDict, objDict):
+    def generate_label_dictionaries(self, detDict, trkDict, objDict):
         '''
             convenience function to use the data in the object table to label the detections (and tracklets) with the NEO status
             - i.e. as would presumably be required if one wants to use labelled data for 'training' in an ML routine
         '''
-        for o in trkDict['objectID'] :
+        
+        # Use the objectID label in each tracklet in trkDict to query the objDict and hence attach an 'isNEO' label to the tracklet data
+        trackletLabels  = { trkID : objDict[trk['objectID']]['isNEO'] for trkID, trk in trkDict.items() }
 
+        # Use the trkID label in each detection in detDict to query the trackletLabels and hence attach an 'isNEO' label to the detection data
+        detectionLabels = { detID : trackletLabels[det['trkID']]      for detID, det in detDict.items() }
+
+        return
 
 
 
@@ -191,6 +198,6 @@ N.check_tracklet_correspondance(detDict, trkDict, objDict)
 
 # (v) Use the data in the object table to label the detections (and tracklets) with the NEO status
 #  - i.e. as would presumably be required if one wants to use labelled data for 'training' in an ML routine
-detectionLabels , trackletLabels = N.generate_label_arrays()
+detectionLabels , trackletLabels = N.generate_label_dictionaries()
 
 
