@@ -21,7 +21,7 @@ import numpy as np
 # -----------------------------------
 # Define data structures for neo_ml
 # -----------------------------------
-observation_field_definitions = {
+detection_field_definitions = {
     'detID'         : 'Unique Detection ID',
     'trkID'         : 'Unique Tracklet ID ',
     'timeUTC'       : 'Time of each observation [UTC]'

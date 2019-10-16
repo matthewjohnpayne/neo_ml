@@ -1,0 +1,2 @@
+# detID, trkID, timeUTC,   Obs_X,     Obs_Y,    Obs_Z,    UV_X,     UV_Y,     UV_Z,    obsCode,    eclipticLat, solarElong
+D00000AB12, T0000XY12, 2018-06-29T08:15:27.24, 0.01, 0.92, 0.34, 0.866, 0.5, 0.0, G96, 0.0, 0.1
