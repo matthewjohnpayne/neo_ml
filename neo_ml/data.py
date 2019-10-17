@@ -34,7 +34,7 @@ detection_field_definitions = {
     'Vmag'          : 'Equivalent V-band magnitude of the detection',
     'obsCode'       : 'A unique code to label the observatory which undertook the detection',
     'eclipticLat'   : 'Latitude of the observation from the plane of the ecliptic [radians]',
-    'solarElong'    : 'Angular separation between the Sun and the detection, with Earth as the reference point',
+    'solarElong'    : 'Angular separation between the Sun and the detection, with Earth as the reference point [radians]',
 }
 tracklet_field_definitions = {
     'trkID'         : 'Unique Tracklet ID ',
