@@ -13,6 +13,7 @@
 # ---------------------------------------
 import os, sys
 from collections import namedtuple
+import re
 
 # ---------------------------------------
 # Local imports
@@ -112,7 +113,10 @@ class NEODATA():
         # Populate a dictionary with the data from the body
         dataList = []
         for line in body:
-            lineSplit = [_.strip() for _ in line.split(",") ]
+            
+            # split the line "intelligently":
+            # - look for content inside "[ ... ]" as well as splitting on commas
+            lineSplit = self._split_intelligently(line)
             
             # (i) check the number of fields is correct
             if dataKey != 'trkID':
@@ -127,6 +131,47 @@ class NEODATA():
         #print('\n _check_imported_data_structure executed successfully')
         return headerKeys, dataList
 
+    def _split_intelligently(self, line):
+        '''
+            # - look for content inside "[ ... ]" as well as splitting on commas
+        '''
+        if "[" in line:
+            
+            # find positions of []
+            left  = [m.start() for m in re.finditer('\[', line.strip())]
+            right = [m.start() for m in re.finditer('\]', line)]
+            
+            # identify the different "portions" of the string, and label them as to whether they are within a bracket region "[ ... ]" or not
+            # (i) starting region ...
+            regions            = [ (0, left[0]) ]
+            region_is_bracket  = [ False ]
+            # (ii) bracket regions ...
+            for l,r in zip( left, right ):
+                regions.append( (l,r+1) )
+                region_is_bracket.append( True )
+            # (iii) gaps between the brackets
+            for r,l in zip(right[:-1],left[1:]):
+                regions.append( (r+1,l) )
+                region_is_bracket.append( False )
+        
+            # Ensure the regions are sorted
+            regions, region_is_bracket = zip(*sorted(zip(regions, region_is_bracket)))
+
+            # split the regions on commas is they are a non-bracket region
+            lineSplit = []
+            for region, is_bracket in zip(regions, region_is_bracket):
+                regionStr = line[region[0]:region[1]]
+                if is_bracket:
+                    lineSplit.append(regionStr)
+                else:
+                    # getting rid of any gap regions which contain ONLY commas/blank-spaces
+                    tmp_ = [_.replace(' ','') for _ in regionStr.split(",") if _.replace(' ','') != '']
+                    if len(tmp_):
+                        lineSplit.extend(tmp_)
+        else:
+            # Just do a simple split based on commas
+            lineSplit = [_.strip() for _ in line.split(",") ]
+        return lineSplit
 
     def check_tracklet_correspondance(self, detDict, trkDict, objDict):
         '''
@@ -184,17 +229,20 @@ N = NEODATA()
 # (i) Read detection data into a dictionary
 filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_real_detections.csv')
 detDict = N.read_detection_data_into_dict(filepath)
-print('len(detDict) = ', len(detDict))
+print(' There are %d unique detections' % len(detDict))
+d=detDict; key0 = list(d.keys())[0]; print("An example detection looks like ...\n", key0, d[key0])
 
 # (ii) Read tracklet data into a dictionary
 filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_real_tracklets.csv')
 trkDict = N.read_tracklet_data_into_dict(filepath)
-print('len(trkDict) = ', len(trkDict))
+print(' There are %d unique tracklets' % len(trkDict))
+d=trkDict; key0 = list(d.keys())[0]; print("An example tracklet looks like ...\n", key0, d[key0])
 
 # (iii) Read object data into a dictionary
 filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_real_objects.csv')
 objDict = N.read_object_data_into_dict(filepath)
-print('len(objDict) = ', len(objDict))
+print(' There are %d unique objects' % len(objDict))
+d=objDict; key0 = list(d.keys())[0]; print("An example object looks like ...\n", key0, d[key0])
 
 # (iv) Perform a test/check to see whether
 # - (a) all of the tracklet-IDs that are in the *detection* table have corresponding entries in the *tracklet* table (and vice-versa)
@@ -203,7 +251,9 @@ N.check_tracklet_correspondance(detDict, trkDict, objDict)
 
 # (v) Use the data in the object table to label the detections (and tracklets) with the NEO status
 #  - i.e. as would presumably be required if one wants to use labelled data for 'training' in an ML routine
-detectionLabels , trackletLabels = N.generate_label_dictionaries(detDict, trkDict, objDict)
+trackletLabels, detectionLabels = N.generate_label_dictionaries(detDict, trkDict, objDict)
 print("len(detectionLabels)", len(detectionLabels))
 print("len(trackletLabels) ", len(trackletLabels))
+for trk in trkDict:
+    print("trkID=%20s :\t isNEO = %6s " % (trk, trackletLabels[trk]) )
 
