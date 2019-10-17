@@ -115,7 +115,8 @@ class NEODATA():
             lineSplit = [_.strip() for _ in line.split(",") ]
             
             # (i) check the number of fields is correct
-            assert len(lineSplit) == len(dataDefinitions)
+            if dataKey != 'trkID':
+                assert len(lineSplit) == len(dataDefinitions), 'dataKey'
         
             # (ii) insert additional checks of content
             # ...
