@@ -235,7 +235,7 @@ class NEODATA():
 N = NEODATA()
 
 # ----------- SELECT SOURCE FILE LENGTH ----
-numberString = '1e5'
+numberString = '1e6'
 
 # (i) Read detection data into a dictionary
 filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_%s_real_detections.csv' % numberString)

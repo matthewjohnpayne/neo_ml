@@ -146,13 +146,14 @@ def _process_detections(dataList, numberString, dict_of_Strings_keyed_on_orbitID
                 obs80 = o.parseOpt(obs80)
                 detDict['detID'] = detID
                 detDict['trkID'] = trkID
-              
+                if 'K10C00077F' == orbitID:
+                    print( ' orbitID, detID, trkID, obs80 === \n\t' , orbitID, detID, trkID, obs80)
                 PROCEED = True
             except:
                 PROCEED = False
             
             
-            if PROCEED :
+            if PROCEED and trkID not in  [""," ",'""','\"\"',None] :
                 
                 
                 # At this point we know the orbitID, so we will only both to proceed if the orbitID is contained in ...
@@ -166,7 +167,7 @@ def _process_detections(dataList, numberString, dict_of_Strings_keyed_on_orbitID
                         countTrkIDs +=1
                         
                         # arbitrarily choose to write-out every 1000 tracklets
-                        critCount = 100
+                        critCount = 1000
                         if countTrkIDs % critCount == 0 :
                             print(" ... l=%15d, countTrkIDs=%10d" % (l , countTrkIDs) , flush=True)
                             # do_tracklet_calculations_on_accumulated_contents_of_tracklet_dictionary
@@ -372,7 +373,7 @@ def _append_to_file(filepath, outputListOfStrings ):
 
 
 # ----------- SELECT SOURCE FILE LENGTH ----
-numberString = '1e5'
+numberString = '1e6'
 
 
 # ----------- ORBITS -----------------------
