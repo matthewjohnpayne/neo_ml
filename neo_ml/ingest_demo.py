@@ -67,9 +67,9 @@ class NEODATA():
         # Structure the data into an appropriatedly key-ed dictionary
         # While doing this, check for uniqueness
         dataDict = {}
-        for item in dataList:
+        for n, item in enumerate(dataList):
             d = dict(zip(headerKeys, item))
-            assert d[dataKey] not in dataDict, '%s already in dataDict ' % d[dataKey]
+            assert d[dataKey] not in dataDict, '%s already in dataDict (line %d reading from %s)' % (d[dataKey], n, filepath)
             dataDict[d[dataKey]] = d
         
         print('\n _read_data_into_dict successfuly imported data from %s' % filepath)
@@ -107,7 +107,7 @@ class NEODATA():
                 headerKeys = [_.strip() for _ in line[1:].split(",") ]
                 assert len(headerKeys) == len(dataDefinitions), ' differing lengths ... %r ,  %r' % (headerKeys , dataDefinitions)
                 break
-        assert headerKeys != "", 'could not find correct header line'
+        assert headerKeys != "", 'could not find correct header line in ... \n \t %r ' % dataDefinitions
 
         # Check body
         # Populate a dictionary with the data from the body
@@ -183,16 +183,24 @@ class NEODATA():
         # Check all of the tracklet-IDs that are in the *detection* dict have corresponding entries in the *tracklet* dict (and vice-versa)
         trkIDsFromDetectionDict = { det['trkID'] : True for det in detDict.values() }
         for trkID in trkIDsFromDetectionDict:
-            assert trkID in trkDict, '%s not in trkDict' % t
+            assert trkID in trkDict, '%s not in trkDict' % trkID
         for trkID in trkDict:
-            assert trkID in trkIDsFromDetectionDict, '%s not in trkIDsFromDetectionDict and hence not in detDict' % t
+            assert trkID in trkIDsFromDetectionDict, '%s not in trkIDsFromDetectionDict and hence not in detDict' % trkID
 
         # Check all of the object-IDs that are in the *tracklet* dict have corresponding entries in the *object* dict (and vice-versa)
         objectIDsFromTrackletDict = { trk['objectID'] : True for trk in trkDict.values() }
+        cntNOT, cntIN = 0,0
         for objectID in objectIDsFromTrackletDict:
-            assert objectID in objDict, '%s not in objDict' % t
+            #assert objectID in objDict, '%s (from TrackletDict) not in objDict' % objectID
+            if objectID not in objDict:
+                cntNOT +=1
+                print( '%s (from TrackletDict) not in objDict' % objectID)
+            else:
+                cntIN += 1
+                print(objectID , ' in as desired ...')
+        print(cntNOT, cntIN)
         for objectID in objDict:
-            assert objectID in objectIDsFromTrackletDict, '%s not in objectIDsFromTrackletDict  and hence not in trkDict' % t
+            assert objectID in objectIDsFromTrackletDict, '%s not in objectIDsFromTrackletDict and hence not in trkDict' % objectID
 
         print("\n check_tracklet_correspondance successfully executed")
 
@@ -226,20 +234,23 @@ class NEODATA():
 # Define a useful NEODATA-class object to use for the ingest of data
 N = NEODATA()
 
+# ----------- SELECT SOURCE FILE LENGTH ----
+numberString = '1e5'
+
 # (i) Read detection data into a dictionary
-filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_real_detections.csv')
+filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_%s_real_detections.csv' % numberString)
 detDict = N.read_detection_data_into_dict(filepath)
 print(' There are %d unique detections' % len(detDict))
 d=detDict; key0 = list(d.keys())[0]; print("An example detection looks like ...\n", key0, d[key0])
 
 # (ii) Read tracklet data into a dictionary
-filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_real_tracklets.csv')
+filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_%s_real_tracklets.csv' % numberString)
 trkDict = N.read_tracklet_data_into_dict(filepath)
 print(' There are %d unique tracklets' % len(trkDict))
 d=trkDict; key0 = list(d.keys())[0]; print("An example tracklet looks like ...\n", key0, d[key0])
 
 # (iii) Read object data into a dictionary
-filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_real_objects.csv')
+filepath = os.path.join( os.path.dirname(os.path.abspath(__file__)), 'sample_data' , 'sample_data_%s_real_objects.csv' % numberString)
 objDict = N.read_object_data_into_dict(filepath)
 print(' There are %d unique objects' % len(objDict))
 d=objDict; key0 = list(d.keys())[0]; print("An example object looks like ...\n", key0, d[key0])
